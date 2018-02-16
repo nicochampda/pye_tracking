@@ -33,13 +33,15 @@ def detect_face(frame):
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
             
             #Region d'interet autour des yeux
-            roi_eye_gray = roi_gray[ey:ey+eh][ex:ex+ew]
-            roi_eye_color = roi_color[ey:ey+eh][ex:ex+ew]
+            roi_eye_gray = roi_gray[ey:ey+eh, ex:ex+ew]
+            roi_eye_color = roi_color[ey:ey+eh, ex:ex+ew]
             if np.min(roi_eye_gray.shape) > 5:
                 c = detect_eye_center(roi_eye_gray)
-                cv2.line(roi_eye_color, tuple(c-np.array((0,4))), tuple(c+np.array((0,4))), (255,255,0), 1)
-                cv2.line(roi_eye_color, tuple(c-np.array((4,0))), tuple(c+np.array((4,0))), (255,255,0),1)
-                
+                #c = ( np.int(eh/2),np.int(ew/2))
+                print(ey, ey+eh, ex, ex+ew, roi_eye_color.shape, roi_color.shape,c)
+                cv2.line(roi_eye_color, tuple(c-np.array((0,2))), tuple(c+np.array((0,2))), (0,255,255), 1)
+                cv2.line(roi_eye_color, tuple(c-np.array((2,0))), tuple(c+np.array((2,0))), (0,255,255),1)
+                 
     return frame
 
 def detect_eye_center(img):
@@ -49,17 +51,20 @@ def detect_eye_center(img):
     x,y = img.shape
     c = 0,0
     max_val = 0
+    less_x, less_y = np.where((grad_x > 250) | (grad_y > 250))
+    print(less_x.shape, less_y.shape)
     for i in range(x):
+        print(i)
         for j in range(y):
             somme = 0
-            for k in range(x):
-                for l in range(y):
-                    if (i,j) != (k,l):
-                        dx = k - i
-                        dy = l - j
-                        norm = np.sqrt(dx**2 + dy**2)
-                        somme += (grad_x[k][l]*(dx/norm) + grad_y[k][l]*(dy/norm))**2
-                    
+            for nb, k in enumerate(less_x):
+                l = less_y[nb]
+                if (i,j) != (k,l):
+                    dx = k - i
+                    dy = l - j
+                    norm = np.sqrt(dx**2 + dy**2)
+                    somme += (grad_x[k][l]*(dx/norm) + grad_y[k][l]*(dy/norm))**2
+                
             if somme > max_val:
                 max_val = somme
                 c = i,j
@@ -68,12 +73,10 @@ def detect_eye_center(img):
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()
-    cap.release()
     detection = detect_face(frame)
 
     # Display the resulting frame
     cv2.imshow('frame', detection)
-
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
