@@ -76,6 +76,12 @@ def detect_eye_center(img):
     grad_x = np.gradient(img, axis=0)
     grad_y = np.gradient(img, axis=1)
 
+    plt.subplot(121)
+    plt.imshow(grad_x, cmap = 'hot')
+    plt.subplot(122)
+    plt.imshow(grad_y, cmap='hot')
+    plt.show()
+
 #    plt.subplot(121)
 #    plt.hist(grad_x, bins=256)
 #    plt.subplot(122)
@@ -85,7 +91,7 @@ def detect_eye_center(img):
     x,y = img.shape
     c = 0,0
     max_val = 0
-    seuil = 100
+    seuil = 230
     less_x, less_y = np.where((grad_x > seuil) | (grad_y > seuil))
     #print(less_x.shape, less_y.shape)
     for i in range(x):
@@ -156,9 +162,9 @@ def test_dataset():
             orig_r = c_gt_r[0], c_gt_r[1] + 20 # MAUVAIS SENS ?
             cv2.putText(detection, str(dist_r), orig_r, font, 0.3, (255,255,255))
 
-            #plt.imshow(detection, cmap='gray')
+            plt.imshow(detection, cmap='gray')
             #plt.pause(0.2)
-            #plt.show()
+            plt.show()
             gc.collect()
 
     moyenne = np.mean(distances)
