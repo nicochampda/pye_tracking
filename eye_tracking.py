@@ -75,20 +75,21 @@ def detect_eye_center(img):
     #print(img.shape)
     grad_x = np.gradient(img, axis=0)
     grad_y = np.gradient(img, axis=1)
-
+    
     # Heatmap des gradients
-    plt.subplot(141)
-    plt.imshow(grad_x, cmap = 'hot')
-    plt.colorbar()
-    plt.subplot(142)
-    plt.imshow(img, cmap='gray')
-    plt.subplot(143)
-    plt.imshow(grad_y, cmap='hot')
-    plt.colorbar()
-    plt.subplot(144)
-    plt.imshow((grad_x + grad_y) / 2, cmap='hot')
-    plt.colorbar()
-    plt.show()
+    # plt.figure()
+    # plt.subplot(141)
+    # plt.imshow(grad_x, cmap = 'hot')
+    # plt.colorbar()
+    # plt.subplot(142)
+    # plt.imshow(img, cmap='gray')
+    # plt.subplot(143)
+    # plt.imshow(grad_y, cmap='hot')
+    # plt.colorbar()
+    # plt.subplot(144)
+    # plt.imshow((grad_x + grad_y) / 2, cmap='hot')
+    # plt.colorbar()
+    # plt.show()
 
     # Histogramme des gradients
     #plt.subplot(121)
@@ -98,23 +99,39 @@ def detect_eye_center(img):
     #plt.show()
 
     x,y = img.shape
+    
+    grad_x[0][:] = np.zeros(y)    
+    grad_x[-1][:] = np.zeros(y)    
+    grad_y[0][:] = np.zeros(x)   
+    grad_y[-1][:] = np.zeros(x)
+    
     c = 0,0
     max_val = 0
     seuil = 230
     less_x, less_y = np.where((grad_x > seuil) | (grad_y > seuil))
     #print(less_x.shape, less_y.shape)
-    for i in range(x):
+    less = [(less_x[i], less_y[i]) for i in range(len(less_x))]
+    
+    border = 15
+    for i in range(border,x-border):
         #print(i)
-        for j in range(y):
+        for j in range(border,y-border):
             somme = 0
-            for nb, k in enumerate(less_x):
-                l = less_y[nb]
-                if (i,j) != (k,l):
-                    dx = k - i
-                    dy = l - j
-                    norm = np.sqrt(dx**2 + dy**2)
-                    somme += (grad_x[k][l]*(dx/norm) + grad_y[k][l]*(dy/norm))**2
+            try:
+                less.remove((i,j))
+                flag = True
+            except ValueError:
+                flag = False
                 
+            for k,l in less:
+                dx = k - i
+                dy = l - j
+                norm = np.sqrt(dx**2 + dy**2)
+                somme += ((grad_x[k][l]*dx + grad_y[k][l]*dy)/norm)**2
+            
+            if flag:
+                less.add((i,j))
+            
             if somme > max_val:
                 max_val = somme
                 c = i,j
@@ -171,9 +188,9 @@ def test_dataset():
             orig_r = c_gt_r[0], c_gt_r[1] + 20 # MAUVAIS SENS ?
             cv2.putText(detection, str(dist_r), orig_r, font, 0.3, (255,255,255))
 
-            plt.imshow(detection, cmap='gray')
+            #plt.imshow(detection, cmap='gray')
             #plt.pause(0.2)
-            plt.show()
+            #plt.show()
             gc.collect()
 
     moyenne = np.mean(distances)
