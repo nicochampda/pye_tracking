@@ -76,18 +76,27 @@ def detect_eye_center(img):
     grad_x = np.gradient(img, axis=0)
     grad_y = np.gradient(img, axis=1)
 
-    plt.subplot(121)
+    # Heatmap des gradients
+    plt.subplot(141)
     plt.imshow(grad_x, cmap = 'hot')
-    plt.subplot(122)
+    plt.colorbar()
+    plt.subplot(142)
+    plt.imshow(img, cmap='gray')
+    plt.subplot(143)
     plt.imshow(grad_y, cmap='hot')
+    plt.colorbar()
+    plt.subplot(144)
+    plt.imshow((grad_x + grad_y) / 2, cmap='hot')
+    plt.colorbar()
     plt.show()
 
-#    plt.subplot(121)
-#    plt.hist(grad_x, bins=256)
-#    plt.subplot(122)
-#    plt.hist(grad_y, bins=256)
-#    plt.show()
-#
+    # Histogramme des gradients
+    #plt.subplot(121)
+    #plt.hist(grad_x, bins=256)
+    #plt.subplot(122)
+    #plt.hist(grad_y, bins=256)
+    #plt.show()
+
     x,y = img.shape
     c = 0,0
     max_val = 0
