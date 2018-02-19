@@ -8,7 +8,10 @@ from open_image import open_eye_pos
 
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
 eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
-
+ 
+# Parametres
+#border = 14
+seuil = 120
 
 def detect_eye(frame, is_gray = False):
 
@@ -21,15 +24,17 @@ def detect_eye(frame, is_gray = False):
     else:
         # Conversion en niveaux de gris
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        print(gray)
 
     # Extraction des faces
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
     # Pour toutes les faces detectees
+    centres = []
     for (x,y,w,h) in faces:
         # Dessine un rectangle
         cv2.rectangle(frame, (x,y), (x+w,y+h), (255,0,0),2)
+
+        #print(w)
 
         # Regions d'interet
         roi_gray = gray[y:y+h, x:x+w]
@@ -56,7 +61,7 @@ def detect_eye(frame, is_gray = False):
             roi_eye_color = roi_color[ey:ey+eh, ex:ex+ew]
             #print(roi_eye_gray.shape)
             #if np.min(roi_eye_gray.shape) > 5:
-            c = detect_eye_center(roi_eye_gray)
+            c = detect_eye_center(roi_eye_gray, w, ew)
             #c = ( np.int(eh/2),np.int(ew/2))
             #print(ey, ey+eh, ex, ex+ew, roi_eye_color.shape, roi_color.shape,c)
             cv2.line(roi_eye_color, tuple(c-np.array((0,2))), tuple(c+np.array((0,2))), (0,255,255), 1)
@@ -71,7 +76,10 @@ def detect_eye(frame, is_gray = False):
     return frame, centres 
 
 
-def detect_eye_center(img):
+def detect_eye_center(img, face_size, eye_size):
+
+    global seuil
+    
     #print(img.shape)
     grad_x = np.gradient(img, axis=0)
     grad_y = np.gradient(img, axis=1)
@@ -92,11 +100,11 @@ def detect_eye_center(img):
     # plt.show()
 
     # Histogramme des gradients
-    #plt.subplot(121)
-    #plt.hist(grad_x, bins=256)
-    #plt.subplot(122)
-    #plt.hist(grad_y, bins=256)
-    #plt.show()
+    plt.subplot(121)
+    plt.hist(grad_x, bins=256)
+    plt.subplot(122)
+    plt.hist(grad_y, bins=256)
+    plt.show()
 
     x,y = img.shape
     
@@ -107,15 +115,16 @@ def detect_eye_center(img):
     
     c = 0,0
     max_val = 0
-    seuil = 230
     less_x, less_y = np.where((grad_x > seuil) | (grad_y > seuil))
     #print(less_x.shape, less_y.shape)
     less = [(less_x[i], less_y[i]) for i in range(len(less_x))]
+
+    border = int((eye_size - (face_size / 9)) / 2) 
+    #print("border", border)
     
-    border = 15
-    for i in range(border,x-border):
+    for i in range(border, x-border):
         #print(i)
-        for j in range(border,y-border):
+        for j in range(border, y-border):
             somme = 0
             try:
                 less.remove((i,j))
@@ -130,16 +139,26 @@ def detect_eye_center(img):
                 somme += ((grad_x[k][l]*dx + grad_y[k][l]*dy)/norm)**2
             
             if flag:
-                less.add((i,j))
+                less.append((i,j))
             
             if somme > max_val:
                 max_val = somme
                 c = i,j
     return c
+
+def hist_photo():
+    img = cv2.imread('champdav.png', 0)
+
+    detection, centres = detect_eye(img, is_gray = True)
+
+    plt.imshow(detection, cmap='gray')
+    plt.show()
     
 
 def test_dataset():
-    for i in range(30):
+    nb_img = 60
+    distances = []
+    for i in range(nb_img):
 
         # Construction du nom de fichier
         img_name = str(i)
@@ -147,6 +166,7 @@ def test_dataset():
             img_name = '000' + img_name
         elif len(img_name) == 2:
             img_name = '00' + img_name
+            hist_photo()
         elif len(img_name) == 3:
             img_name = '0' + img_name
 
@@ -169,8 +189,6 @@ def test_dataset():
         cv2.line(detection, tuple(c_gt_l-np.array((2,0))), tuple(c_gt_l+np.array((2,0))), (255,255,0), 1)
         cv2.line(detection, tuple(c_gt_r-np.array((0,2))), tuple(c_gt_r+np.array((0,2))), (255,255,0), 1)
         cv2.line(detection, tuple(c_gt_r-np.array((2,0))), tuple(c_gt_r+np.array((2,0))), (255,255,0), 1)
-
-        distances = []
 
         if len(centres) == 2:
             # Calcul de la distance
@@ -206,7 +224,7 @@ def distance_center(pos_gt, pos_est):
 def main():
 
     cap = cv2.VideoCapture(0)
-    cap.set(cv.CV_CAP_PROP_FPS, 1) 
+    cap.set(cv2.CAP_PROP_FPS, 0.5) 
     
     while(True):
         # Capture frame-by-frame
@@ -225,5 +243,6 @@ def main():
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    main()
+    #main()
     #test_dataset()
+    hist_photo()
