@@ -189,6 +189,7 @@ def distance_center(pos_gt, pos_est):
 def main():
 
     cap = cv2.VideoCapture(0)
+    cap.set(cv.CV_CAP_PROP_FPS, 1) 
     
     while(True):
         # Capture frame-by-frame
@@ -207,5 +208,5 @@ def main():
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    #main()
-    test_dataset()
+    main()
+    #test_dataset()
