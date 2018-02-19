@@ -1,4 +1,6 @@
+import gc
 import numpy as np
+import matplotlib.pyplot as plt
 import cv2
 import matplotlib.pyplot as plt
 from open_image import open_image
@@ -8,7 +10,7 @@ face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
 eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
 
 
-def detect_face(frame, is_gray = 'False'):
+def detect_eye(frame, is_gray = False):
 
     global face_cascade
     global eye_cascade
@@ -19,6 +21,7 @@ def detect_face(frame, is_gray = 'False'):
     else:
         # Conversion en niveaux de gris
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        print(gray)
 
     # Extraction des faces
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
@@ -34,33 +37,77 @@ def detect_face(frame, is_gray = 'False'):
 
         # Extraction des yeux
         eyes = eye_cascade.detectMultiScale(roi_gray)
-        for (ex,ey,ew,eh) in eyes:
+
+        # Extraction des deux yeux les plus hauts
+        if len(eyes) > 2:
+            eyes2 = [list(i) for i in eyes]
+            eyes2.sort(key=lambda tup: tup[1])
+            eyes_haut = [eyes2[0], eyes2[1]]
+        else:
+            eyes_haut = eyes
+
+        centres = []
+        for (ex,ey,ew,eh) in eyes_haut:
+
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
+            
+            #Region d'interet autour des yeux
+            roi_eye_gray = roi_gray[ey:ey+eh, ex:ex+ew]
+            roi_eye_color = roi_color[ey:ey+eh, ex:ex+ew]
+            #print(roi_eye_gray.shape)
+            #if np.min(roi_eye_gray.shape) > 5:
+            c = detect_eye_center(roi_eye_gray)
+            #c = ( np.int(eh/2),np.int(ew/2))
+            #print(ey, ey+eh, ex, ex+ew, roi_eye_color.shape, roi_color.shape,c)
+            cv2.line(roi_eye_color, tuple(c-np.array((0,2))), tuple(c+np.array((0,2))), (0,255,255), 1)
+            cv2.line(roi_eye_color, tuple(c-np.array((2,0))), tuple(c+np.array((2,0))), (0,255,255), 1)
 
-    return frame
+            centres.append(np.array(c) + [ex + x, ey + y])
 
-def main():
 
-    cap = cv2.VideoCapture(0)
+        # Tri: gauche puis droite
+        centres.sort(key=lambda tup: tup[0])
+                 
+    return frame, centres 
+
+
+def detect_eye_center(img):
+    #print(img.shape)
+    grad_x = np.gradient(img, axis=0)
+    grad_y = np.gradient(img, axis=1)
+
+#    plt.subplot(121)
+#    plt.hist(grad_x, bins=256)
+#    plt.subplot(122)
+#    plt.hist(grad_y, bins=256)
+#    plt.show()
+#
+    x,y = img.shape
+    c = 0,0
+    max_val = 0
+    seuil = 100
+    less_x, less_y = np.where((grad_x > seuil) | (grad_y > seuil))
+    #print(less_x.shape, less_y.shape)
+    for i in range(x):
+        #print(i)
+        for j in range(y):
+            somme = 0
+            for nb, k in enumerate(less_x):
+                l = less_y[nb]
+                if (i,j) != (k,l):
+                    dx = k - i
+                    dy = l - j
+                    norm = np.sqrt(dx**2 + dy**2)
+                    somme += (grad_x[k][l]*(dx/norm) + grad_y[k][l]*(dy/norm))**2
+                
+            if somme > max_val:
+                max_val = somme
+                c = i,j
+    return c
     
-    while(True):
-        # Capture frame-by-frame
-        ret, frame = cap.read()
-    
-        detection = detect_face(frame)
-    
-        # Display the resulting frame
-        cv2.imshow('frame', detection)
-    
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    
-    # When everything done, release the capture
-    cap.release()
-    cv2.destroyAllWindows()
 
 def test_dataset():
-    for i in range(4):
+    for i in range(30):
 
         # Construction du nom de fichier
         img_name = str(i)
@@ -75,22 +122,75 @@ def test_dataset():
         img = open_image('BioID-FaceDatabase-V1.2/BioID_' + img_name + '.pgm')
         positions = open_eye_pos('BioID-FaceDatabase-V1.2/BioID_' + img_name + '.eye')
 
-        detection = detect_face(img, is_gray = True)
+        # Estimation du centre des yeux
+        detection, centres = detect_eye(img, is_gray = True)
 
-        c = positions[0], positions[1]
-        cv2.line(detection, tuple(c-np.array((0,2))), tuple(c+np.array((0,2))), (255,255,0), 1)
-        cv2.line(detection, tuple(c-np.array((2,0))), tuple(c+np.array((2,0))), (255,255,0), 1)
+        #print("estimes:", centres)
+        #print("verite :", positions)
 
-        c = positions[2], positions[3]
-        cv2.line(detection, tuple(c-np.array((0,2))), tuple(c+np.array((0,2))), (255,255,0), 1)
-        cv2.line(detection, tuple(c-np.array((2,0))), tuple(c+np.array((2,0))), (255,255,0), 1)
+        # Centre des yeux gauche et droit
+        c_gt_r = positions[0], positions[1]
+        c_gt_l = positions[2], positions[3]
+
+        # Dessin des centres verite terrain
+        cv2.line(detection, tuple(c_gt_l-np.array((0,2))), tuple(c_gt_l+np.array((0,2))), (255,255,0), 1)
+        cv2.line(detection, tuple(c_gt_l-np.array((2,0))), tuple(c_gt_l+np.array((2,0))), (255,255,0), 1)
+        cv2.line(detection, tuple(c_gt_r-np.array((0,2))), tuple(c_gt_r+np.array((0,2))), (255,255,0), 1)
+        cv2.line(detection, tuple(c_gt_r-np.array((2,0))), tuple(c_gt_r+np.array((2,0))), (255,255,0), 1)
+
+        distances = []
+
+        if len(centres) == 2:
+            # Calcul de la distance
+            dist_l = np.trunc(distance_center(c_gt_l, centres[0]) * 100) / 100
+            dist_r = np.trunc(distance_center(c_gt_r, centres[1]) * 100) / 100
+
+            distances.append(dist_l)
+            distances.append(dist_r)
+
+            # Affichage des distances
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            orig_l = c_gt_l[0], c_gt_l[1] + 20
+            cv2.putText(detection, str(dist_l), orig_l, font, 0.3, (255,255,255))
+
+            orig_r = c_gt_r[0], c_gt_r[1] + 20 # MAUVAIS SENS ?
+            cv2.putText(detection, str(dist_r), orig_r, font, 0.3, (255,255,255))
+
+            #plt.imshow(detection, cmap='gray')
+            #plt.pause(0.2)
+            #plt.show()
+            gc.collect()
+
+    moyenne = np.mean(distances)
+    print(moyenne)
 
 
-        plt.imshow(detection, cmap='gray')
-        plt.show()
-        #plt.pause(0.01)
+
+def distance_center(pos_gt, pos_est):
+    """ doit etre ndarray"""
+    return np.sqrt(np.sum((pos_gt - pos_est) ** 2))
+
+
+def main():
+
+    cap = cv2.VideoCapture(0)
+    
+    while(True):
+        # Capture frame-by-frame
+        ret, frame = cap.read()
+    
+        detection, centres = detect_eye(frame)
+    
+        # Display the resulting frame
+        cv2.imshow('frame', detection)
+    
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    
+    # When everything done, release the capture
+    cap.release()
+    cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     #main()
     test_dataset()
-    
