@@ -11,7 +11,7 @@ eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
  
 # Parametres
 #border = 14
-seuil = 120
+seuil = 200
 
 def detect_eye(frame, is_gray = False):
 
@@ -79,6 +79,8 @@ def detect_eye(frame, is_gray = False):
 def detect_eye_center(img, face_size, eye_size):
 
     global seuil
+
+    img = cv2.blur(img, (5,5))
     
     #print(img.shape)
     grad_x = np.gradient(img, axis=0)
@@ -100,11 +102,11 @@ def detect_eye_center(img, face_size, eye_size):
     # plt.show()
 
     # Histogramme des gradients
-    plt.subplot(121)
-    plt.hist(grad_x, bins=256)
-    plt.subplot(122)
-    plt.hist(grad_y, bins=256)
-    plt.show()
+    #plt.subplot(121)
+    #plt.hist(grad_x, bins=256)
+    #plt.subplot(122)
+    #plt.hist(grad_y, bins=256)
+    #plt.show()
 
     x,y = img.shape
     
@@ -156,8 +158,9 @@ def hist_photo():
     
 
 def test_dataset():
-    nb_img = 60
+    nb_img = 200
     distances = []
+    accepte = 0
     for i in range(nb_img):
 
         # Construction du nom de fichier
@@ -166,7 +169,6 @@ def test_dataset():
             img_name = '000' + img_name
         elif len(img_name) == 2:
             img_name = '00' + img_name
-            hist_photo()
         elif len(img_name) == 3:
             img_name = '0' + img_name
 
@@ -191,6 +193,9 @@ def test_dataset():
         cv2.line(detection, tuple(c_gt_r-np.array((2,0))), tuple(c_gt_r+np.array((2,0))), (255,255,0), 1)
 
         if len(centres) == 2:
+
+            accepte += 1
+
             # Calcul de la distance
             dist_l = np.trunc(distance_center(c_gt_l, centres[0]) * 100) / 100
             dist_r = np.trunc(distance_center(c_gt_r, centres[1]) * 100) / 100
@@ -203,7 +208,7 @@ def test_dataset():
             orig_l = c_gt_l[0], c_gt_l[1] + 20
             cv2.putText(detection, str(dist_l), orig_l, font, 0.3, (255,255,255))
 
-            orig_r = c_gt_r[0], c_gt_r[1] + 20 # MAUVAIS SENS ?
+            orig_r = c_gt_r[0], c_gt_r[1] + 20 
             cv2.putText(detection, str(dist_r), orig_r, font, 0.3, (255,255,255))
 
             #plt.imshow(detection, cmap='gray')
@@ -212,7 +217,10 @@ def test_dataset():
             gc.collect()
 
     moyenne = np.mean(distances)
-    print(moyenne)
+    print("\nmoyenne:", moyenne)
+    print("total:  ", nb_img)
+    print("accepte:", accepte)
+    print("rejete: ", nb_img - accepte)
 
 
 
@@ -244,5 +252,5 @@ def main():
 
 if __name__ == '__main__':
     #main()
-    #test_dataset()
-    hist_photo()
+    test_dataset()
+    #hist_photo()
