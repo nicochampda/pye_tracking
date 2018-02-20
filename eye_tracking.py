@@ -62,7 +62,7 @@ def detect_eye(frame, is_gray = False):
             #print(roi_eye_gray.shape)
             #if np.min(roi_eye_gray.shape) > 5:
             c = detect_eye_center(roi_eye_gray, w, ew)
-            #c = ( np.int(eh/2),np.int(ew/2))
+            #c = ( np.int(eh/2),np.int(ew/2)) # Valeur reference
             #print(ey, ey+eh, ex, ex+ew, roi_eye_color.shape, roi_color.shape,c)
             cv2.line(roi_eye_color, tuple(c-np.array((0,2))), tuple(c+np.array((0,2))), (0,255,255), 1)
             cv2.line(roi_eye_color, tuple(c-np.array((2,0))), tuple(c+np.array((2,0))), (0,255,255), 1)
@@ -80,7 +80,7 @@ def detect_eye_center(img, face_size, eye_size):
 
     global seuil
 
-    img = cv2.blur(img, (5,5))
+    #img = cv2.blur(img, (5,5))
     
     #print(img.shape)
     grad_x = np.gradient(img, axis=0)
@@ -158,7 +158,7 @@ def hist_photo():
     
 
 def test_dataset():
-    nb_img = 200
+    nb_img = 1000
     distances = []
     accepte = 0
     for i in range(nb_img):
@@ -173,8 +173,8 @@ def test_dataset():
             img_name = '0' + img_name
 
         # Ouverture du premier fichier
-        img = open_image('BioID-FaceDatabase-V1.2/BioID_' + img_name + '.pgm')
-        positions = open_eye_pos('BioID-FaceDatabase-V1.2/BioID_' + img_name + '.eye')
+        img = open_image('/homes/mvu/Bureau/Sanssauvegarde/BioID-FaceDatabase-V1.2/BioID_' + img_name + '.pgm')
+        positions = open_eye_pos('/homes/mvu/Bureau/Sanssauvegarde/BioID-FaceDatabase-V1.2/BioID_' + img_name + '.eye')
 
         # Estimation du centre des yeux
         detection, centres = detect_eye(img, is_gray = True)
