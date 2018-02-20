@@ -32,7 +32,7 @@ def detect_eye(frame, is_gray = False):
     centres = []
     for (x,y,w,h) in faces:
         # Dessine un rectangle
-        cv2.rectangle(frame, (x,y), (x+w,y+h), (255,0,0),2)
+        #cv2.rectangle(frame, (x,y), (x+w,y+h), (255,0,0),2)
 
         #print(w)
 
@@ -80,27 +80,12 @@ def detect_eye_center(img, face_size, eye_size):
 
     global seuil
 
-    img = cv2.blur(img, (5,5))
+    #img = cv2.blur(img, (5,5))
     
     #print(img.shape)
     grad_x = np.gradient(img, axis=0)
     grad_y = np.gradient(img, axis=1)
     
-    # Heatmap des gradients
-    # plt.figure()
-    # plt.subplot(141)
-    # plt.imshow(grad_x, cmap = 'hot')
-    # plt.colorbar()
-    # plt.subplot(142)
-    # plt.imshow(img, cmap='gray')
-    # plt.subplot(143)
-    # plt.imshow(grad_y, cmap='hot')
-    # plt.colorbar()
-    # plt.subplot(144)
-    # plt.imshow((grad_x + grad_y) / 2, cmap='hot')
-    # plt.colorbar()
-    # plt.show()
-
     # Histogramme des gradients
     #plt.subplot(121)
     #plt.hist(grad_x, bins=256)
@@ -110,9 +95,9 @@ def detect_eye_center(img, face_size, eye_size):
 
     x,y = img.shape
     
-    grad_x[0][:] = np.zeros(y)    
+    grad_x[0][:]  = np.zeros(y)    
     grad_x[-1][:] = np.zeros(y)    
-    grad_y[0][:] = np.zeros(x)   
+    grad_y[0][:]  = np.zeros(x)   
     grad_y[-1][:] = np.zeros(x)
     
     c = 0,0
@@ -120,6 +105,22 @@ def detect_eye_center(img, face_size, eye_size):
     less_x, less_y = np.where((grad_x > seuil) | (grad_y > seuil))
     #print(less_x.shape, less_y.shape)
     less = [(less_x[i], less_y[i]) for i in range(len(less_x))]
+    #print("less:", less)
+
+    # Heatmap des gradients
+    #plt.figure()
+    #plt.subplot(141)
+    #plt.imshow(grad_x, cmap = 'jet')
+    #plt.colorbar()
+    #plt.subplot(142)
+    #plt.imshow(img, cmap='gray')
+    #plt.subplot(143)
+    #plt.imshow(grad_y, cmap='jet')
+    #plt.colorbar()
+    #plt.subplot(144)
+    #plt.imshow((grad_x + grad_y) / 2, cmap='jet')
+    #plt.colorbar()
+    #plt.show()
 
     border = int((eye_size - (face_size / 9)) / 2) 
     #print("border", border)
@@ -217,10 +218,10 @@ def test_dataset():
             gc.collect()
 
     moyenne = np.mean(distances)
-    print("\nmoyenne:", moyenne)
-    print("total:  ", nb_img)
-    print("accepte:", accepte)
-    print("rejete: ", nb_img - accepte)
+    #print("\nmoyenne:", moyenne)
+    #print("total:  ", nb_img)
+    #print("accepte:", accepte)
+    #print("rejete: ", nb_img - accepte)
 
 
 
@@ -232,7 +233,7 @@ def distance_center(pos_gt, pos_est):
 def main():
 
     cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FPS, 0.5) 
+    cap.set(cv2.CAP_PROP_FPS, 2) 
     
     while(True):
         # Capture frame-by-frame
@@ -251,6 +252,6 @@ def main():
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    #main()
-    test_dataset()
+    main()
+    #test_dataset()
     #hist_photo()
