@@ -164,12 +164,14 @@ def detect_eye_center(img, face_size, eye_size):
                 flag = True
             except ValueError:
                 flag = False
-                
+
+            pix_val = 255 - img[i][j]
+
             for k,l in less:
                 dx = k - i
                 dy = l - j
                 norm = np.sqrt(dx**2 + dy**2)
-                somme += ((grad_x[k][l]*dx + grad_y[k][l]*dy)/norm)**2
+                somme += pix_val * ((grad_x[k][l]*dx + grad_y[k][l]*dy)/norm)**2
             
             if flag:
                 less.append((i,j))
