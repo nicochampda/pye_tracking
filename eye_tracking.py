@@ -215,8 +215,8 @@ def test_dataset():
             img_name = '0' + img_name
 
         # Ouverture du premier fichier
-        img = open_image('/homes/mvu/Bureau/Sanssauvegarde/BioID-FaceDatabase-V1.2/BioID_' + img_name + '.pgm')
-        positions = open_eye_pos('/homes/mvu/Bureau/Sanssauvegarde/BioID-FaceDatabase-V1.2/BioID_' + img_name + '.eye')
+        img = open_image('data/BioID_' + img_name + '.pgm')
+        positions = open_eye_pos('data/BioID_' + img_name + '.eye')
 
         # Centre des yeux gauche et droit
         c_gt_r = positions[0], positions[1]
@@ -276,7 +276,7 @@ def test_dataset():
     print(" rejete:", args.nb_img - accepte)
     print("--------------------------")
 
-    plt.hist(errors, cumulative=True, histtype='step', bins=500)
+    plt.hist(errors, cumulative=True, histtype='step', bins=500, normed=True)
     plt.show()
 
 def distance_center(pos_gt, pos_est):
