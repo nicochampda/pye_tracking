@@ -81,10 +81,10 @@ def detect_eye(frame, is_gray = False):
             #c = ( np.int(eh/2),np.int(ew/2))
 
             # Dessin d'une croix au centre
-            cv2.line(roi_eye_color, tuple(c-np.array((0,50))),
-                    tuple(c+np.array((0,50))), (0,255,255), 1)
-            cv2.line(roi_eye_color, tuple(c-np.array((50,0))),
-                    tuple(c+np.array((50,0))), (0,255,255), 1)
+            cv2.line(roi_eye_color, tuple(c-np.array((0,5))),
+                    tuple(c+np.array((0,5))), (0,255,255), 1)
+            cv2.line(roi_eye_color, tuple(c-np.array((5,0))),
+                    tuple(c+np.array((5,0))), (0,255,255), 1)
 
             # Enregistrement des centres calcules
             # relativement a l'image totale 
@@ -137,19 +137,19 @@ def detect_eye_center(img, face_size, eye_size):
     less = [(less_x[i], less_y[i]) for i in range(len(less_x))]
 
     # Heatmap des gradients
-    plt.figure()
-    plt.subplot(141)
-    plt.imshow(grad_x, cmap = 'jet')
-    plt.colorbar()
-    plt.subplot(142)
-    plt.imshow(grad_y, cmap='jet')
-    plt.colorbar()
-    plt.subplot(143)
-    plt.imshow((grad_x + grad_y) / 2, cmap='jet')
-    plt.colorbar()
-    plt.subplot(144)
-    plt.imshow(img, cmap='gray')
-    plt.show()
+    #plt.figure()
+    #plt.subplot(141)
+    #plt.imshow(grad_x, cmap = 'jet')
+    #plt.colorbar()
+    #plt.subplot(142)
+    #plt.imshow(grad_y, cmap='jet')
+    #plt.colorbar()
+    #plt.subplot(143)
+    #plt.imshow((grad_x + grad_y) / 2, cmap='jet')
+    #plt.colorbar()
+    #plt.subplot(144)
+    #plt.imshow(img, cmap='gray')
+    #plt.show()
 
     # Delimite la zone où les centres potentiels sont recherches
     border = int((eye_size - (face_size / 9)) / 2) 
@@ -324,13 +324,13 @@ def read_args():
 
     parser = argparse.ArgumentParser(description='Eye tracking.')
 
-    parser.add_argument('-m', '--mode', action = 'store', default = 'webcam', choices = ['webcam', 'dataset', 'photo'],
+    parser.add_argument('-m', '--mode', action = 'store', default = 'dataset', choices = ['webcam', 'dataset', 'photo'],
             help = '\'webcam\' pour la detection sur un flux video de la webcam, \'photo\' pour une photo unique ou \'test\' sur le jeu de donnees BioID. \'webcam\' par defaut.')
 
-    parser.add_argument('-n', '--nb_img', action = 'store', default = 50, type = int,
+    parser.add_argument('-n', '--nb_img', action = 'store', default = 2, type = int,
             help='Nombre d\'images a tester, 50 par defaut et 1520 max. Seulement avec le mode dataset.')
 
-    parser.add_argument('-i', '--images', action = 'store_true', default = False,
+    parser.add_argument('-i', '--images', action = 'store_true', default = True,
             help = 'Affiche les detections sur les images tests. Desactive par defaut.')
 
     parser.add_argument('-s', '--seuil', action = 'store', default = 200, type = int,
