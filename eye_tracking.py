@@ -81,10 +81,10 @@ def detect_eye(frame, is_gray = False):
             #c = ( np.int(eh/2),np.int(ew/2))
 
             # Dessin d'une croix au centre
-            cv2.line(roi_eye_color, tuple(c-np.array((0,2))),
-                    tuple(c+np.array((0,2))), (0,255,255), 1)
-            cv2.line(roi_eye_color, tuple(c-np.array((2,0))),
-                    tuple(c+np.array((2,0))), (0,255,255), 1)
+            cv2.line(roi_eye_color, tuple(c-np.array((0,50))),
+                    tuple(c+np.array((0,50))), (0,255,255), 1)
+            cv2.line(roi_eye_color, tuple(c-np.array((50,0))),
+                    tuple(c+np.array((50,0))), (0,255,255), 1)
 
             # Enregistrement des centres calcules
             # relativement a l'image totale 
@@ -137,19 +137,19 @@ def detect_eye_center(img, face_size, eye_size):
     less = [(less_x[i], less_y[i]) for i in range(len(less_x))]
 
     # Heatmap des gradients
-    #plt.figure()
-    #plt.subplot(141)
-    #plt.imshow(grad_x, cmap = 'jet')
-    #plt.colorbar()
-    #plt.subplot(142)
-    #plt.imshow(grad_y, cmap='jet')
-    #plt.colorbar()
-    #plt.subplot(143)
-    #plt.imshow((grad_x + grad_y) / 2, cmap='jet')
-    #plt.colorbar()
-    #plt.subplot(144)
-    #plt.imshow(img, cmap='gray')
-    #plt.show()
+    plt.figure()
+    plt.subplot(141)
+    plt.imshow(grad_x, cmap = 'jet')
+    plt.colorbar()
+    plt.subplot(142)
+    plt.imshow(grad_y, cmap='jet')
+    plt.colorbar()
+    plt.subplot(143)
+    plt.imshow((grad_x + grad_y) / 2, cmap='jet')
+    plt.colorbar()
+    plt.subplot(144)
+    plt.imshow(img, cmap='gray')
+    plt.show()
 
     # Delimite la zone où les centres potentiels sont recherches
     border = int((eye_size - (face_size / 9)) / 2) 
@@ -184,13 +184,13 @@ def detect_eye_center(img, face_size, eye_size):
 def hist_photo():
     """ Test de l'algorithme sur une image unique issue d'une webcam """
     # Image test
-    img = cv2.imread('champdav.png', 0)
+    img = cv2.imread('photo2.jpg', 0)
 
     # Detection
     detection, centres = detect_eye(img, is_gray = True)
 
     # Affichage du resultat
-    plt.imshow(detection, cmap='gray')
+    plt.imshow(detection)
     plt.show()
     
 
@@ -355,4 +355,4 @@ if __name__ == '__main__':
     elif args.mode == 'dataset':
         test_dataset()
     elif args.mode == 'photo':
-        args.nb_img()
+        hist_photo()
